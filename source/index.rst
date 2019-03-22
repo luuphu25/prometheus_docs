@@ -8,9 +8,12 @@ Welcome to prometheus_docs's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-
-
+   :titlesonly:
+   :includehidden:
+   
+   post/Monitor_method
+   post/Metric
+   post/Common_issues
 
 Indices and tables
 ==================
