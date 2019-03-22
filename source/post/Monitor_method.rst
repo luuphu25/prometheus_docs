@@ -1,3 +1,3 @@
-A beginner's guide to writing documentation
+Method monitoring
 ===========================================
 #h3 this is about page
