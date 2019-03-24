@@ -85,6 +85,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Method monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Metric.html">Metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Common_issues.html">Common problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Page_fault.html">Page Fault</a></li>
 </ul>
 
             
@@ -151,59 +152,79 @@
             
   <div class="section" id="method-monitoring">
 <h1>Method monitoring<a class="headerlink" href="#method-monitoring" title="Permalink to this headline">¶</a></h1>
-<p>Nhiều service có thể bị ảnh hưởng hiệu suất do nền tảng OS mà nó chạy phía trên (linux). Đặc biệt việc monitor tài nguyên hệ thống của Linux càng cần thiết nếu ứng dụng nhạy cảm với tài nguyên hệ thống ( như I/O cần thiết cho DB service)</p>
-<p>Đối với Linux, ta cần quan tâm nhất là CPU, Disk, một phần memory (cho saturation) và network . Thực chất Network hiện nay khá khó overload ( tầng OS) nên phần lớn vẫn dựa vào monitor ở service ( lantency, rate) …</p>
-<p>Tuy nhiên cũng có thể monitor rate của IN/OUT network để cung cấp khả năng phát hiện các hoạt động bất thường đối với hệ thống với việc phổi hợp các metrics khác.</p>
-<p><strong>## CPU</strong></p>
-<p>Khía cạnh thực tế cần quan tâm là Saturation và Utilization.</p>
-<p>Saturation:  Để dễ dàng người ta thường đánh giá Load_avg(the number of processes using CPU or waiting for system resources (usually CPU and disk) .Tuy nhiên trong Linux Load Avg là gộp chung cả CPU và Disk I/O nên có thể làm khó phân biệt cụ thể.  Nếu service của hệ thông không hoạt động I/O nhiều thì chỉ số Load Avg có thể dùng đánh giá CPU saturation. Nhìn chung metric này vẫn cho ta nhận định được hệ thống có vấn đề không =&gt; xem xét các metrics cụ thể hơn của CPU và Disk</p>
-<p>Ta có thể xem xét các</p>
-<p>Đối với các server hypervisor ta có thể quan tâm thêm %Steal time., steal time nếu cao cũng chỉ ra CPU đang bị đầy.  Nếu %steam &gt; 20 % thì cần nên xem xét hoạt động của server <a class="footnote-reference" href="#id2" id="id1">[1]</a></p>
-<p>[Percona] <a class="reference external" href="https://www.percona.com/blog/2017/08/04/saturation-metrics-in-pmm-120/">https://www.percona.com/blog/2017/08/04/saturation-metrics-in-pmm-120/</a></p>
+<p>Nhiều service có thể bị ảnh hưởng hiệu suất do nền tảng OS mà nó chạy phía trên (linux). Đặc biệt việc monitor tài nguyên hệ thống của Linux càng cần thiết nếu ứng dụng nhạy cảm với tài nguyên hệ thống ( như I/O ảnh hưởng tới DB service)</p>
+<p>Đối với Linux, ta cần quan tâm nhất là CPU, Disk, một phần memory (cho saturation) và network. Thực chất Network hiện nay khá khó overload (tầng OS) nên phần lớn vẫn dựa vào monitor ở service (lantency, rate) …</p>
+<p>Tuy nhiên cũng có thể monitor rate của IN/OUT network để cung cấp khả năng phát hiện các hoạt động bất thường đối với hệ thống với việc phổi hợp cùng với các metrics khác.</p>
+<p><strong>1. CPU</strong></p>
+<p>Khía cạnh thực tế cần quan tâm là <strong>Saturation</strong> và <strong>Utilization</strong>.
+<strong>#Saturation:</strong>  Để dễ dàng người ta thường đánh giá thông số <strong>Load_Average</strong> (số lượng tb tiến trình đang sử dụng CPU hoặc đợi tài nguyên hệ thống &lt; cả CPU và DISK&gt;). Do trong Linux <strong>Load_Avg</strong> là gộp chung cả CPU và Disk I/O nên thông số này chưa nói lên được vấn đề ở Disk hay CPU.  Nếu service của hệ thông không hoạt động I/O nhiều thì chỉ số Load Avg có thể dùng đánh giá CPU saturation. Nhìn chung metric này vẫn cho ta nhận định được hệ thống có vấn đề không để từ đó xem xét các metrics cụ thể hơn của CPU và Disk khi monitor</p>
+<p>Ngoài ra, đối với các server hypervisor ta có thể quan tâm thêm chỉ số <strong>%Steal time</strong>. <strong>Steal time</strong> nếu cao cũng chỉ ra CPU đang bị đầy.  Nếu <cite>%steam &gt; 20</cite> % thì cần nên xem xét hoạt động của server <a class="footnote-reference" href="#id4" id="id1">[1]</a></p>
+<p>Mặt khác Percona (1 hãng phần mềm) cũng đưa ra cách thức riêng để đánh giá các chỉ số liên quan tới <strong>Saturation</strong> <a class="footnote-reference" href="#id5" id="id2">[2]</a></p>
 <p><a class="reference external" href="https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&amp;panelId=33&amp;fullscreen&amp;orgId=1&amp;var-interval=$__auto_interval&amp;var-host=ps56&amp;from=now-12h&amp;to=now">https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&amp;panelId=33&amp;fullscreen&amp;orgId=1&amp;var-interval=$__auto_interval&amp;var-host=ps56&amp;from=now-12h&amp;to=now</a></p>
-<p>Nên chú ý metrics CPU saturation sẽ không có nhiều ý nghĩ nếu hệ thống chạy service single-thread Nodejs server, Nginx … khi đó cần đánh giá CPU Utilization</p>
-<p>#Utilization (% time mà tài nguyên đang hoạt động - the average time that the resource was busy servicing work</p>
+<p>Detail về CPU: <code class="docutils literal notranslate"><span class="pre">https://www.slashroot.in/linux-cpu-performance-monitoring-tutorial</span></code></p>
+<p><em>Lưu ý rằng, metrics CPU saturation sẽ không có nhiều ý nghĩ nếu hệ thống chạy service single-thread: Nodejs server, Nginx … khi đó cần đánh giá</em> <strong>CPU Utilization</strong></p>
+<p><strong>#Utilization</strong></p>
 <p>Ta tính tổng %</p>
-<p>sum CPU %: User + Nice + System + (probably) Steal</p>
-<p>Cần lưu ý tới I/O wait nếu chỉ số I/O wait cao là dấu hiệu hệ thống disk có bottleneck và làm chậm hệ thống</p>
-<p>Softirq cao có thể là dấu hiệu có vấn đề ở thiết bị mạng</p>
-<p>Nếu chỉ số idle = 0 trong 1 khoảng thời gian =&gt; khả năng xử lý của CPU tới giới hạn</p>
+<p><code class="docutils literal notranslate"><span class="pre">sum</span> <span class="pre">CPU</span> <span class="pre">%:</span> <span class="pre">User</span> <span class="pre">+</span> <span class="pre">Nice</span> <span class="pre">+</span> <span class="pre">System</span> <span class="pre">+</span> <span class="pre">(probably)</span> <span class="pre">Steal</span></code></p>
+<p>Ngoài tính %CPU sử dụng cần lưu một số thông số cụ thể của CPU time:</p>
+<ul class="simple">
+<li>I/O wait nếu chỉ số I/O wait cao là dấu hiệu hệ thống disk có bottleneck và làm chậm hệ thống</li>
+<li>Softirq cao có thể là dấu hiệu có vấn đề ở thiết bị mạng</li>
+<li>Nếu chỉ số idle = 0 trong 1 khoảng thời gian =&gt; khả năng xử lý của CPU tới giới hạn</li>
+</ul>
 <p><a class="reference external" href="https://singapore.my-netdata.io/default.html#menu_system_submenu_cpu;theme=slate;help=true">https://singapore.my-netdata.io/default.html#menu_system_submenu_cpu;theme=slate;help=true</a></p>
-<p>## Memory:</p>
-<p>Đối vơi memory ta cũng chỉ quan tâm tới Saturation và Utilization</p>
-<p>Saturation : Bất ki việc swap nào đều thể hiện việc thiếu RAM.  Tuy nhiên trên các OS linux khi chỉ số swappiness được set !=1 , thì có thể có tình trạng swap trước khi Ram được sử dụng hết điều này là do kernel ko giảm các cache khi thực hiện swap nên bộ nhớ của bạn có thể cạn kiệt trước khi toàn bộ RAM đều đầy bởi hoạt động của các tiến trình.</p>
-<p>Cũng nên theo dõi OOM error (OUT of Memory) : khi RAM bị đầy nghiêm trọng, OS sẽ tự động kill process user chiếm nhiều RAM và đó có thể là service MySQL, server ..</p>
-<p>Utilization: Tính toán % lượng Ram có thể sử dụng (free + buffer + cache)</p>
-<p>Paging and Swaping: ( IBM read books )</p>
-<p>Paging : di chuyển các page độc lập qua swap space trên disk ( page là đơn vị tổ chức địa chỉ nhớ trên Linux).</p>
-<p>Swap: di chuyển cả vùng nhớ của tiến trình qua vùng swap.</p>
-<p>Nếu system luôn thực hiện paging qua disk ( chỉ số paging out cao) =&gt; cần thêm ram cho server. Còn nếu rate của page_out thấp thì ko ảnh hưởng tới hiệu suất của hệ thống</p>
-<p>A page fault is a type of interrupt, called trap, raised by computer hardware when a running program accesses a memory page that is mapped into the virtual address space, but not actually loaded into main memory. If the page is loaded in memory at the time the fault is generated, but is not marked in the memory management unit as being loaded in memory, then it is called a minor or soft page fault. A major page fault is generated when the system needs to load the memory page from disk or swap memory.</p>
-<p>---</p>
-<p>## Disk :</p>
-<p>Request Rate : chỉ số IOPS của disk system ( r/s và w/s)</p>
-<p>Error Rate: Không có lỗi cụ thể trên hệ thống đĩa ngoại trừ độ trễ quá cao. Hầu hết lỗi có thẻ xảy ra liên quan tới kiểu file hệ thống: ext4 hay nfs đều khó phát hiện và thường tìm thông qua kernel log.</p>
-<p>Latency: Cần theo dõi cả read và write time.và chỉ số trễ thường tăng cao nếu disk bị bão hòa.</p>
-<p>Utilization: nghĩa là đĩa đang thực hiện công việc nào đó. Thường thì 100% chỉ ra tình trạng đĩa có thể bị tắc nghẽn.</p>
-<p>Saturation: sử dụng %util, ko quá chính xác nhưng đó đủ cho 1 hệ thông monitor đơn giản</p>
+<p><strong>2. Memory</strong></p>
+<p>Đối vơi memory ta cũng chỉ quan tâm tới <strong>Saturation</strong> và <strong>Utilization</strong></p>
+<p><strong>#Saturation</strong>
+Bất ki việc swap nào đều thể hiện việc thiếu RAM.  Tuy nhiên trên các OS linux khi chỉ số swappiness được set !=1 , thì có thể có tình trạng swap trước khi Ram được sử dụng hết điều này là do kernel ko giảm các cache khi thực hiện swap nên bộ nhớ của bạn có thể cạn kiệt trước khi toàn bộ RAM đều đầy bởi hoạt động của các tiến trình.</p>
+<p><strong>#Utilization</strong>
+Tính toán % lượng Ram đã sử dụng
+<code class="docutils literal notranslate"><span class="pre">`used</span> <span class="pre">=</span> <span class="pre">total</span> <span class="pre">-</span> <span class="pre">(free</span> <span class="pre">+</span> <span class="pre">buffer</span> <span class="pre">+</span> <span class="pre">cache)`</span></code></p>
+<p><strong>#page faults and swapping</strong>
+Để đánh giá chính xác hơn tình trạng hệ thống có xử dụng RAM, ta cần quan tâm nhất tới mức độ (tần suất) swap_in/out. Khi rate cao thì nghĩa là ram vật lý không đủ và hệ thông phải sử dụng disk thường xuyên - với hiệu suất thấp hơn RAM. <a class="reference external" href="Page_fault.html">Page_fault</a></p>
+<p>Còn nếu rate của page_out thấp thì ko ảnh hưởng tới hiệu suất của hệ thống</p>
+<p><strong>Metrics quan tấm</strong></p>
+<ul class="simple">
+<li>Swap Activity (swap-ins and swap outs)</li>
+<li>Amount of swap space used</li>
+</ul>
+<p>Cũng nên theo dõi <strong>OOM error</strong> (OUT of Memory) : khi RAM bị đầy nghiêm trọng, OS sẽ tự động kill process user chiếm nhiều RAM và đó có thể là service MySQL, server ..</p>
+<p><strong>3. Disk:</strong></p>
+<p>Cách mapping các metrics I/O càn thiết trong Node_exporter (prometheus) <a class="footnote-reference" href="#id6" id="id3">[3]</a>
+<strong>Request Rate :</strong> chỉ số IOPS của disk system ( r/s và w/s)</p>
+<p><strong>Error Rate:</strong> Không có lỗi cụ thể trên hệ thống đĩa ngoại trừ độ trễ quá cao. Hầu hết lỗi có thẻ xảy ra liên quan tới kiểu file hệ thống: ext4 hay nfs đều khó phát hiện và thường tìm thông qua kernel log.</p>
+<p><strong>Latency:</strong> Cần theo dõi cả read và write time.và chỉ số trễ thường tăng cao nếu disk bị bão hòa.
+<strong>Saturation:</strong> Tiến hành monitor bằng I/O queue trên từng thiết bị. Có thể lấy bằng
+<code class="docutils literal notranslate"><span class="pre">iostat</span> <span class="pre">-aqu-sz</span></code>. I/O queue cho biết số yêu cầu I/O còn tồn đọng. thường chỉ số này ở múc 2-3 là tối ưu. Càng nhiều hơn càng có nguy cơ bottle neck</p>
+<p><strong>Utilization:</strong> nghĩa là đĩa đang thực hiện công việc nào đó. Thường thì 100% chỉ ra tình trạng đĩa có thể bị tắc nghẽn. Thông thường tính bằng sử dụng %util (Percentage of CPU time during which I/O requests were issued)</p>
 <p>Disk system là thành phần trọng yếu trong việc monitor server do nó có thể ảnh hưởng lớn tới khả năng hoạt động của service. Đồng thời cũng là nơi thường gặp vấn đề nhất. Tuy nhiên cũng có những vấn đề bị che dấu gián tiếp bởi các thành phần khác. ( IBM red book)  như thiết RAM, CPU sử dụng cao bởi các tiến trình đang đợi I/O</p>
 <p>Disk chậm có thể là kết quả của:</p>
 <p>Memory buffer bị đầy bởi dữ liệu cần ghi =&gt; Delay request vì không còn free mem để thực hiện write request hoặc response phải đợi dữ liệu được đọc từ disk</p>
 <p>Thiếu Ram, không đủ buffer cho network request -&gt; lỗi ghi đồng bộ</p>
 <p>Disk utilization, controller utilization</p>
-<p>Disk chưa hoàn thành ( châm) -được thể hiện bở response time cao hay network utilization thấp</p>
+<p>Disk chưa hoàn thành ( châm) -&gt; được thể hiện bở response time cao hay network utilization thấp</p>
 <p>Disk I/O thời gian dài -&gt; hàng đợi full -&gt; CPU high idle + low utilization do đợi requests tiếp theo.</p>
-<p>## Network:</p>
+<p><strong>4. Network:</strong></p>
 <p>Rate: READ/WRITE bandwidth / s</p>
 <p>Utilization:  Read/write bandwith / total bandwitdth</p>
-<blockquote>
-<div><table class="docutils footnote" frame="void" id="id2" rules="none">
+<table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://scoutapp.com/blog/understanding-cpu-steal-time-when-should-you-be-worried">https://scoutapp.com/blog/understanding-cpu-steal-time-when-should-you-be-worried</a></td></tr>
 </tbody>
 </table>
-</div></blockquote>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="https://www.percona.com/blog/2017/08/04/saturation-metrics-in-pmm-120/">https://www.percona.com/blog/2017/08/04/saturation-metrics-in-pmm-120/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="https://www.robustperception.io/">https://www.robustperception.io/</a><a href="#id7"><span class="problematic" id="id8">mapping-iostat-to-the-node-exporters-node_disk_</span></a>-metrics</td></tr>
+</tbody>
+</table>
 </div>
 
 

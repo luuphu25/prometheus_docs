@@ -14,6 +14,7 @@ Welcome to prometheus_docs's documentation!
    post/Monitor_method
    post/Metric
    post/Common_issues
+   post/Page_fault
 
 Indices and tables
 ==================

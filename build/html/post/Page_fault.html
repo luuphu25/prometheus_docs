@@ -1,0 +1,218 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="vi" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="vi" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Page Fault &mdash; Tài liệu prometheus_docs 1</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Tìm Kiếm" href="../search.html" />
+    <link rel="prev" title="Common problem" href="Common_issues.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> prometheus_docs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Monitor_method.html">Method monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Metric.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Common_issues.html">Common problem</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Page Fault</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">prometheus_docs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Page Fault</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/post/Page_fault.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="page-fault">
+<span id="page-fault-and-swapping"></span><h1>Page Fault<a class="headerlink" href="#page-fault" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><strong>Paging:</strong> Linux cấp phát bộ nhớ cho tiến trình bằng cách chia bộ nhớ vật lý vào các pages (thông thường có độ lớn 4K) -&gt; mapping các page cho bộ nhớ ảo mà tiến trình cần. Công việc này được thực hiện bởi Memory Management Unit (MMU) ở CPU. Những pages trong Linux có các trạng thái khác nhau: free( chưa được sử dụng), đang chứa mã thực thi hay chứa dữ liệu của chương trình...Các giải thuật khác nhau được sử dụng trong việc quản lý các pages đó: cached, free hoặc loaded tùy theo từng trường hợp.</li>
+</ul>
+<p><strong>#Page Fault</strong>
+Linux có thể phải thực thi số lượng lớn các chương trình mà mỗi chương trình có thể có mã thực thi lên tới hàng trăm MB, nhưng không phải toàn bộ mã đều cần chạy 1 lúc. Có nhiều đoạn mã chỉ được chương trình khi khởi tạo hoặc khi có điều kiện kích hoạt. Cho nên theo thời gian Linux có thể loại bỏ các page bộ nhớ mà nó nghĩ ko cần thiết hoặc ít sử dụng. Do đó không phải tất cả mã của chương trình đều nằm trong bộ nhớ (vẫn có trên disk) kể cả khi chương trình đó đang được thực thi.
+Một chương trình được thực thi theo các mã hướng dẫn (instruction) bởi CPU. Mỗi instruction được lưu trên bộ nhớ với 1 địa chỉ nhất định. MMU sẽ map các địa chỉ vật lý (RAM) sang các địa chỉ bộ nhớ ảo mà chương trình lưu instruction. Trong khi chương trình thực thi, mà CPU cần địa chỉ nhớ (chưa instruction) mà không có trên bộ nhớ. MMU biết rằng page chứa mã đó không tồn tại (Linux thông báo điều đó) khi đó CPU sẽ raise <strong>page fault</strong></p>
+<p>Page Fault không phải là lỗi, nó nói cho HĐH biết rằng cần truy cập vật lý vào nhiều mã hơn. LInux sẽ cấp nhiều page hơn cho tiến trình, điền mã mà tiến trình cần vào các page mới -&gt; cấu hình lại MMU -&gt; thông báo cho CPU thực thi tiếp.</p>
+<p><strong>#Minor page fault</strong>:
+Là tình trạng page fault mà mã hoặc dữ liệu CPU cần thực thi đã có trên RAM nhưng không được cấp phát cho tiến trình hiện tại. Ví dụ: nếu 1 user đang thực thi trình duyệt web, khi đó memory pages chứa mã thực thi trình duyệt có thể chia sẻ cho người dùng khác (binary chỉ đọc) nên khi có người dùng khác sử dụng trình duyệt, Linux sẽ ko lấy lại mã từ disk mà sẽ mapping memory page chia sẻ được từ tiến trình người dùng 1 cho tiến trình người dùng 2.
+Nói cách khác, trường hợp này HĐH chỉ cần config lại MMU trong việc thực hiện Page Fault.
+<strong>#Major page fault</strong>:
+Là trình trạng page fault cần thực hiện load mã hoặc dữ liệu từ disk sang bộ nhớ.</p>
+<p><strong>#Swapping</strong>
+Swaping xảy ra khi một số memory page được ghi ra đĩa để có bộ nhớ trống cho việc load các mã (dữ liêu) từ đĩa vào nên chắc chắn sẽ có tình trạng Major Page Fault ở tình huống này.
+Tình trạng swap sẽ ảnh hưởng lớn tới hiệu suất của server nếu Linux phải swap-out để có thể swap-in ( do Page Fault liên tục xảy ra). Tình trạng này là <strong>thrashing</strong>. Khi có tình trạng thrashing thì hệ thống phải tốn thời gian để xử lý page fault nhiều hơn là thực thi tiến trình do đó có thể dẫn đến trình trạng không phản hồi và tình trạng bận đĩa cao.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="Common_issues.html" class="btn btn-neutral float-left" title="Common problem" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, phuld2
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
