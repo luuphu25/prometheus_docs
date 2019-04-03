@@ -153,57 +153,39 @@
   <div class="section" id="metrics">
 <h1>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h1>
 <p><strong>1. CPU</strong></p>
-<ul>
-<li><p class="first"><strong>CPU info</strong> ( chi tiết về cpu time )-&gt; Tính time các mode cpu time</p>
+<p><strong>#CPU info</strong> ( chi tiết về cpu time )-&gt; Tính time các mode cpu time</p>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">avg</span> <span class="pre">by</span> <span class="pre">(mode)(irate(node_cpu_seconds_total{mode='iowait',instance=~&quot;$node:$port&quot;,job=~&quot;$job&quot;}[5m]))</span> <span class="pre">*</span> <span class="pre">100</span></code></p>
-</div></blockquote>
-</li>
-</ul>
+<div><code class="docutils literal notranslate"><span class="pre">avg</span> <span class="pre">by</span> <span class="pre">(mode)(irate(node_cpu_seconds_total{mode='iowait',instance=~&quot;$node:$port&quot;,job=~&quot;$job&quot;}[5m]))</span> <span class="pre">*</span> <span class="pre">100</span></code></div></blockquote>
 <p><a href="#id1"><span class="problematic" id="id2">*</span></a>Note: chi tiết các time trên cpu giúp ta hiểu rõ hơn vấn đề xuất phát từ CPU hay phần còn lại (disk). Xem thêm ở <a class="reference external" href="Monitor_method.html">Monitor method</a></p>
-<ul>
-<li><p class="first"><strong>CPU utilization</strong></p>
+<p><strong>#CPU utilization</strong></p>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">-</span> <span class="pre">(avg</span> <span class="pre">by(env,</span> <span class="pre">job)</span> <span class="pre">(irate(node_cpu_seconds_total{mode=&quot;idle&quot;}[5m]))*100)</span></code></p>
-</div></blockquote>
-</li>
-</ul>
+<div><code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">-</span> <span class="pre">(avg</span> <span class="pre">by(env,</span> <span class="pre">job)</span> <span class="pre">(irate(node_cpu_seconds_total{mode=&quot;idle&quot;}[5m]))*100)</span></code></div></blockquote>
 <p><a href="#id3"><span class="problematic" id="id4">*</span></a>Note: Trong trường hợp này ta coi các mode còn lại của CPU đều là thể hiện 'busy' của CPU và tính theo %. các tính chi tiết: <a class="reference external" href="https://www.robustperception.io/understanding-machine-cpu-usage">CPU usage</a></p>
-<ul class="simple">
-<li><strong>CPU saturation</strong></li>
-</ul>
+<p><strong>#CPU saturation</strong></p>
 <p>Riêng với CPU saturation như ở <a class="reference external" href="Monitor_method.html">Monitor method</a> ta định nghĩa bằng <strong>Load_Avage</strong> và <strong>running process</strong> thì đều là metrics được xuất ra sẵn bởi node_exporter (prometheus).</p>
 <p><strong>2. Memory</strong></p>
-<ul class="simple">
-<li><strong>Memory info</strong></li>
-</ul>
-<p>Phần này hiển thị tình trạng của ram: cached, free, buffer được node_exporter xuất ra metric sẵn.</p>
-<ul class="simple">
-<li><strong>Memory utilization</strong></li>
-</ul>
-<p>Thông số này được tính bằng cách lấy:</p>
+<p><strong>#Memory info</strong>
+Phần này hiển thị tình trạng của ram: cached, free, buffer được node_exporter xuất ra metric sẵn.</p>
+<p><strong>#Memory utilization</strong>
+Thông số này được tính bằng cách lấy:</p>
 <p><em>node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Cached_bytes - node_memory_Buffers_bytes</em></p>
 <blockquote>
 <div><code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">-</span> <span class="pre">((node_memory_MemFree_bytes</span> <span class="pre">+</span> <span class="pre">node_memory_Buffers_bytes</span> <span class="pre">+</span> <span class="pre">node_memory_Cached_bytes)</span> <span class="pre">/node_memory_MemTotal_bytes)</span> <span class="pre">*</span> <span class="pre">100</span></code></div></blockquote>
-<ul class="simple">
-<li><strong>Memory saturation</strong></li>
-</ul>
-<p>Thống số này sẽ được đánh giá qua metrics swap và pgscan/s. Đối với pgscan/s thì thông số này không được bật mặc định trên node_exporter ta phải mở ở collector.vmstat.</p>
+<p><strong>#Memory saturation</strong>
+Thống số này sẽ được đánh giá qua metrics swap và pgscan/s. Đối với pgscan/s thì thông số này không được bật mặc định trên node_exporter ta phải mở ở collector.vmstat.</p>
 <p><strong>3. Disk</strong></p>
-<ul class="simple">
-<li><strong>Disk utilization</strong></li>
-</ul>
-<p>Thông số này sẽ được tính bằng cách tính % time/s mà disk dùng cho i/o. Ex: trong 1s disk thực hiện i/o 0.25s  =&gt; 25% utilization <a class="reference external" href="https://unix.stackexchange.com/questions/318274/how-to-calculate-disk-io-load-percentage">detail</a></p>
+<p><strong>#Disk utilization</strong>
+Thông số này sẽ được tính bằng cách tính % time/s mà disk dùng cho i/o. Ex: trong 1s disk thực hiện i/o 0.25s  =&gt; 25% utilization <a class="reference external" href="https://unix.stackexchange.com/questions/318274/how-to-calculate-disk-io-load-percentage">detail</a></p>
 <blockquote>
 <div><code class="docutils literal notranslate"><span class="pre">irate(node_disk_io_time_seconds_total{device!~&quot;^(md\\\\d+$|dm-)&quot;}[5m])</span></code></div></blockquote>
-<ul class="simple">
-<li><strong>Disk saturation</strong></li>
-</ul>
-<dl class="docutils">
-<dt>Thông số này được tính bằng số tiến trình đang đợi I/O. (sar -b)</dt>
-<dd><code class="docutils literal notranslate"><span class="pre">rate(node_disk_io_time_weighted_seconds_total[5m])</span></code></dd>
-</dl>
+<p><strong>#Disk saturation</strong>
+Thông số này được tính bằng số tiến trình đang đợi I/O. (sar -b)</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">rate(node_disk_io_time_weighted_seconds_total[5m])</span></code></div></blockquote>
 <p><a href="#id6"><span class="problematic" id="id7">*</span></a>Note: <a class="reference external" href="https://www.robustperception.io/mapping-iostat-to-the-node-exporters-node_disk_-metrics">chi tiết</a></p>
+<p><strong>4. Network:</strong></p>
+<p>Rate: READ/WRITE bandwidth / s</p>
+<p>Utilization:  Read/write bandwith / total bandwitdth</p>
 </div>
 
 

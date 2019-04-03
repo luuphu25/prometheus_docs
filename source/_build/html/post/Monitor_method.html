@@ -160,8 +160,8 @@
 <strong>#Saturation:</strong>  Để dễ dàng người ta thường đánh giá thông số <strong>Load_Average</strong> (số lượng tb tiến trình đang sử dụng CPU hoặc đợi tài nguyên hệ thống &lt; cả CPU và DISK&gt;). Do trong Linux <strong>Load_Avg</strong> là gộp chung cả CPU và Disk I/O nên thông số này chưa nói lên được vấn đề ở Disk hay CPU.  Nếu service của hệ thông không hoạt động I/O nhiều thì chỉ số Load Avg có thể dùng đánh giá CPU saturation. Nhìn chung metric này vẫn cho ta nhận định được hệ thống có vấn đề không để từ đó xem xét các metrics cụ thể hơn của CPU và Disk khi monitor</p>
 <p>Ngoài ra, đối với các server hypervisor ta có thể quan tâm thêm chỉ số <strong>%Steal time</strong>. <strong>Steal time</strong> nếu cao cũng chỉ ra CPU đang bị đầy.  Nếu <cite>%steam &gt; 20</cite> % thì cần nên xem xét hoạt động của server <a class="footnote-reference" href="#id4" id="id1">[1]</a></p>
 <p>Mặt khác Percona (1 hãng phần mềm) cũng đưa ra cách thức riêng để đánh giá các chỉ số liên quan tới <strong>Saturation</strong> <a class="footnote-reference" href="#id5" id="id2">[2]</a></p>
-<p><a class="reference external" href="https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&amp;panelId=33&amp;fullscreen&amp;orgId=1&amp;var-interval=$__auto_interval&amp;var-host=ps56&amp;from=now-12h&amp;to=now">https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&amp;panelId=33&amp;fullscreen&amp;orgId=1&amp;var-interval=$__auto_interval&amp;var-host=ps56&amp;from=now-12h&amp;to=now</a></p>
-<p>Detail về CPU: <code class="docutils literal notranslate"><span class="pre">https://www.slashroot.in/linux-cpu-performance-monitoring-tutorial</span></code></p>
+<p><a class="reference external" href="https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&amp;panelId=33&amp;fullscreen&amp;orgId=1&amp;var-interval=$__auto_interval&amp;var-host=ps56&amp;from=now-12h&amp;to=now">Sample</a></p>
+<p><a class="reference external" href="https://www.slashroot.in/linux-cpu-performance-monitoring-tutorial">Detail về CPU</a></p>
 <p><em>Lưu ý rằng, metrics CPU saturation sẽ không có nhiều ý nghĩ nếu hệ thống chạy service single-thread: Nodejs server, Nginx … khi đó cần đánh giá</em> <strong>CPU Utilization</strong></p>
 <p><strong>#Utilization</strong></p>
 <p>Ta tính tổng %</p>
@@ -190,8 +190,8 @@ Tính toán % lượng Ram đã sử dụng
 </ul>
 <p>Cũng nên theo dõi <strong>OOM error</strong> (OUT of Memory) : khi RAM bị đầy nghiêm trọng, OS sẽ tự động kill process user chiếm nhiều RAM và đó có thể là service MySQL, server ..</p>
 <p><strong>3. Disk:</strong></p>
-<p>Cách mapping các metrics I/O càn thiết trong Node_exporter (prometheus) <a class="footnote-reference" href="#id6" id="id3">[3]</a>
-<strong>Request Rate :</strong> chỉ số IOPS của disk system ( r/s và w/s)</p>
+<p>Cách mapping các metrics I/O càn thiết trong Node_exporter (prometheus) <a class="footnote-reference" href="#id6" id="id3">[3]</a></p>
+<p><strong>Request Rate :</strong> chỉ số IOPS của disk system ( r/s và w/s)</p>
 <p><strong>Error Rate:</strong> Không có lỗi cụ thể trên hệ thống đĩa ngoại trừ độ trễ quá cao. Hầu hết lỗi có thẻ xảy ra liên quan tới kiểu file hệ thống: ext4 hay nfs đều khó phát hiện và thường tìm thông qua kernel log.</p>
 <p><strong>Latency:</strong> Cần theo dõi cả read và write time.và chỉ số trễ thường tăng cao nếu disk bị bão hòa.
 <strong>Saturation:</strong> Tiến hành monitor bằng I/O queue trên từng thiết bị. Có thể lấy bằng
@@ -199,11 +199,15 @@ Tính toán % lượng Ram đã sử dụng
 <p><strong>Utilization:</strong> nghĩa là đĩa đang thực hiện công việc nào đó. Thường thì 100% chỉ ra tình trạng đĩa có thể bị tắc nghẽn. Thông thường tính bằng sử dụng %util (Percentage of CPU time during which I/O requests were issued)</p>
 <p>Disk system là thành phần trọng yếu trong việc monitor server do nó có thể ảnh hưởng lớn tới khả năng hoạt động của service. Đồng thời cũng là nơi thường gặp vấn đề nhất. Tuy nhiên cũng có những vấn đề bị che dấu gián tiếp bởi các thành phần khác. ( IBM red book)  như thiết RAM, CPU sử dụng cao bởi các tiến trình đang đợi I/O</p>
 <p>Disk chậm có thể là kết quả của:</p>
-<p>Memory buffer bị đầy bởi dữ liệu cần ghi =&gt; Delay request vì không còn free mem để thực hiện write request hoặc response phải đợi dữ liệu được đọc từ disk</p>
-<p>Thiếu Ram, không đủ buffer cho network request -&gt; lỗi ghi đồng bộ</p>
+<ul class="simple">
+<li>Memory buffer bị đầy bởi dữ liệu cần ghi =&gt; Delay request vì không còn free mem để thực hiện write request hoặc response phải đợi dữ liệu được đọc từ disk</li>
+<li>Thiếu Ram, không đủ buffer cho network request -&gt; lỗi ghi đồng bộ</li>
+</ul>
 <p>Disk utilization, controller utilization</p>
-<p>Disk chưa hoàn thành ( châm) -&gt; được thể hiện bở response time cao hay network utilization thấp</p>
-<p>Disk I/O thời gian dài -&gt; hàng đợi full -&gt; CPU high idle + low utilization do đợi requests tiếp theo.</p>
+<ul class="simple">
+<li>Disk chưa hoàn thành ( châm) -&gt; được thể hiện bở response time cao hay network utilization thấp</li>
+<li>Disk I/O thời gian dài -&gt; hàng đợi full -&gt; CPU high idle + low utilization do đợi requests tiếp theo.</li>
+</ul>
 <p><strong>4. Network:</strong></p>
 <p>Rate: READ/WRITE bandwidth / s</p>
 <p>Utilization:  Read/write bandwith / total bandwitdth</p>

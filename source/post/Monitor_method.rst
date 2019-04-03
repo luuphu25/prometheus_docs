@@ -16,9 +16,9 @@ Ngoài ra, đối với các server hypervisor ta có thể quan tâm thêm ch�
 
 Mặt khác Percona (1 hãng phần mềm) cũng đưa ra cách thức riêng để đánh giá các chỉ số liên quan tới **Saturation** [2]_  
 
-https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&panelId=33&fullscreen&orgId=1&var-interval=$__auto_interval&var-host=ps56&from=now-12h&to=now 
+`Sample <https://pmmdemo.percona.com/graph/d/qyzrQGHmk/system-overview?refresh=1m&panelId=33&fullscreen&orgId=1&var-interval=$__auto_interval&var-host=ps56&from=now-12h&to=now>`_ 
 
-Detail về CPU: ``https://www.slashroot.in/linux-cpu-performance-monitoring-tutorial``
+`Detail về CPU <https://www.slashroot.in/linux-cpu-performance-monitoring-tutorial>`_
 
 *Lưu ý rằng, metrics CPU saturation sẽ không có nhiều ý nghĩ nếu hệ thống chạy service single-thread: Nodejs server, Nginx … khi đó cần đánh giá* **CPU Utilization**
  
@@ -67,6 +67,7 @@ Cũng nên theo dõi **OOM error** (OUT of Memory) : khi RAM bị đầy nghiêm
 **3. Disk:** 
 
 Cách mapping các metrics I/O càn thiết trong Node_exporter (prometheus) [3]_
+
 **Request Rate :** chỉ số IOPS của disk system ( r/s và w/s) 
 
 **Error Rate:** Không có lỗi cụ thể trên hệ thống đĩa ngoại trừ độ trễ quá cao. Hầu hết lỗi có thẻ xảy ra liên quan tới kiểu file hệ thống: ext4 hay nfs đều khó phát hiện và thường tìm thông qua kernel log.  
@@ -82,15 +83,15 @@ Disk system là thành phần trọng yếu trong việc monitor server do nó c
 
 Disk chậm có thể là kết quả của:  
 
-Memory buffer bị đầy bởi dữ liệu cần ghi => Delay request vì không còn free mem để thực hiện write request hoặc response phải đợi dữ liệu được đọc từ disk 
+- Memory buffer bị đầy bởi dữ liệu cần ghi => Delay request vì không còn free mem để thực hiện write request hoặc response phải đợi dữ liệu được đọc từ disk 
 
-Thiếu Ram, không đủ buffer cho network request -> lỗi ghi đồng bộ  
+- Thiếu Ram, không đủ buffer cho network request -> lỗi ghi đồng bộ  
 
 Disk utilization, controller utilization 
 
-Disk chưa hoàn thành ( châm) -> được thể hiện bở response time cao hay network utilization thấp  
+- Disk chưa hoàn thành ( châm) -> được thể hiện bở response time cao hay network utilization thấp  
 
-Disk I/O thời gian dài -> hàng đợi full -> CPU high idle + low utilization do đợi requests tiếp theo.  
+- Disk I/O thời gian dài -> hàng đợi full -> CPU high idle + low utilization do đợi requests tiếp theo.  
  
 
 
